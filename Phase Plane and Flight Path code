@@ -1,0 +1,64 @@
+clear; clc; close all;
+% Initial Conditions
+D = 1;
+theta0 = pi/4;
+s0 = 1;
+tspan = [0 30];
+
+% Phase-plane grid size
+th_range = linspace(-2, 2, 25);   
+s_range  = linspace(0.1, 2, 25);        
+
+%Create grid
+[theta, s] = meshgrid(th_range, s_range);
+
+% Create vector field
+dth_dt = ((s.^2 - cos(theta)) ./ max(s, 1e-8));
+ds_dt  = -sin(theta) - D*s.^2;
+
+% Normalise so all arrows same length
+L = sqrt(dth_dt.^2 + ds_dt.^2);
+theta_normal = (dth_dt ./ L);
+s_normal  = (ds_dt  ./ L);
+
+%Plot arrows
+figure; hold on; grid on;
+quiver(theta, s, theta_normal, s_normal,0.4, 'k'); 
+set(gca, 'FontSize', 30);
+xlabel('\theta'); ylabel('s');
+
+% Plot line for given theta0, s0
+y0 = [theta0,s0];flight = @(t,y) [ (y(2)^2 - cos(y(1))) / max(y(2),1e-8); %can add -(y(1) - atan(D))
+                                  -sin(y(1)) - D*y(2)^2 ];
+[t,sol] = ode45(flight, tspan, y0);
+th_path = sol(:,1);
+s_path = sol(:,2);
+
+plot(th_path,s_path,'b','LineWidth',1.5);
+axis tight;
+   
+% Plot Equlibrium
+theta_eq = -atan(D);
+s_eq = (1 + D^2)^(-1/4);
+plot(theta_eq, s_eq, 'ro', 'MarkerFaceColor', 'r');
+hold off;
+
+% Plot flight path - Currently we have sol, a two column matrix with theta in the first column
+% and s in the second - make code for 2D graph from these
+x = zeros(length(t),1);
+y = zeros(length(t),1);
+x(1) = 0; y(1) = 0;
+for i = 2:length(t)
+    x(i) = x(i-1) + s_path(i)*(t(i)-t(i-1))*cos(th_path(i));
+    y(i) = y(i-1) + s_path(i)*(t(i)-t(i-1))*sin(th_path(i));
+end
+
+% x10 is the x-coordinate when y = -10
+x10 = interp1(y,x,-10);
+figure; hold on; grid on;
+plot(x,y,'b','LineWidth',1.5);
+plot(x10,-10,'ro','MarkerFaceColor','r','MarkerSize',10);
+
+xlabel('x'); ylabel('y');
+set(gca, 'FontSize', 30);
+legend('Flight Path','y = -10')

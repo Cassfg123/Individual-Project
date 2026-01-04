@@ -1,0 +1,48 @@
+clear; clc; close all;
+theta_vals = linspace(-pi,pi,1000); % Gives us a string of values for theta ranging from -pi to pi
+x10 = zeros(1000,1); % Creates an empty matrix which eventually gives us corresponing values for horizontal distance
+
+% Variables
+s0 = 2;
+D = 0.3;
+tspan = [0 100];
+
+for i = 1:1000 % code finds horizontal distance at each value for theta
+    theta0 = theta_vals(i);
+
+    y0 = [theta0,s0];flight = @(t,y) [ ((y(2)^2 - cos(y(1))) / max(y(2),1e-8)); % can add -(y(1)-atan(D))
+                                      -sin(y(1)) - D*y(2)^2 ];
+    [t,sol] = ode45(flight, tspan, y0);
+    th_path = sol(:,1);
+    s_path = sol(:,2);
+
+    x = zeros(length(t),1);
+    y = zeros(length(t),1);
+    x(1) = 0; y(1) = 0;
+    for k = 2:length(t) % code contructs a long line of points
+        x(k) = x(k-1) + s_path(k)*(t(k)-t(k-1))*cos(th_path(k));
+        y(k) = y(k-1) + s_path(k)*(t(k)-t(k-1))*sin(th_path(k));
+    end
+
+    x10(i) = interp1(y,x,-10); %gives us the horizontal distance when y = -10
+end
+theta_vals = theta_vals'; % converts to a single column matrix
+[max_x10, i_val] = max(x10); 
+max_theta = theta_vals(i_val); % finds coordinates for greatest dist
+
+figure; hold on; grid on;
+plot(theta_vals,x10,'b','LineWidth',1.5);
+plot(max_theta,max_x10,'ro','MarkerFaceColor','r','MarkerSize',10);
+xlabel('\theta'); ylabel('Horizontal Distance');
+
+% Plot equilibrium angle
+theta_eq = -atan(D);
+eq_distance = interp1(theta_vals,x10,theta_eq);
+plot(theta_eq, eq_distance, 'go', 'MarkerFaceColor', 'g','MarkerSize',10);
+
+set(gca, 'FontSize', 20);
+legend('Horizontal Distance','Optimal Theta','Equilibrium Angle','Location','south');
+text(max_theta +0.7,max_x10 - 0.08, sprintf('(%.2f)',max_theta),"FontSize",25);
+
+%title('Graph representing Horizontal Distance travelled from a drop of 10m
+%as \theta varies, with fixed values for D and s')

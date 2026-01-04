@@ -6,7 +6,7 @@ s0 = 2;
 tspan = [0 100];
 
 % Plot flight path for our given theta0, s0
-y0 = [theta0,s0];flight = @(t,y) [ ((y(2)^2 - cos(y(1))) / max(y(2),1e-8)); %can add -(y(1) - atan(D))
+y0 = [theta0,s0];flight = @(t,y) [ ((y(2)^2 - cos(y(1))) / max(y(2),1e-8)) - (y(1)-atan(D));
                   -sin(y(1)) - D*y(2)^2 ];
 [t,sol] = ode45(flight, tspan, y0);
 th_path = sol(:,1);
